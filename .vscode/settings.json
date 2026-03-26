@@ -1,0 +1,10 @@
+{
+    "python.defaultInterpreterPath": "/home/worker/apps/pyenv/bin/python3.12",
+    "editor.formatOnSave": true,
+    "python-envs.pythonProjects": [
+        {
+            "name": "django-ontology",
+            "path": "/home/worker/apps/github/django-ontology"
+        }
+    ]
+}

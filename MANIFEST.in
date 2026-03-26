@@ -1,0 +1,10 @@
+prune tests
+include CHANGELOG.rst
+include LICENSE
+include pyproject.toml
+include README.rst
+include src/*/py.typed
+prune src/interface
+exclude src/manage.py
+exclude src/ontology/migrations/0001_initial.py
+

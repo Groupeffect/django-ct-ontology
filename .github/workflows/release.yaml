@@ -1,0 +1,132 @@
+name: CI django ontology
+
+env:
+  APT_DEPENDENCIES: "gdal-bin libgdal-dev libgeos-dev libproj-dev libsqlite3-mod-spatialite libopenblas-dev"
+
+on:
+  push:
+    branches:
+    - main
+    # tags:
+    # - '**'
+  pull_request:
+concurrency:
+  group: ${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        python-version:
+        - '3.12'
+
+    steps:
+    - uses: actions/checkout@v6
+    - uses: actions/setup-python@v6
+      with:
+        python-version: ${{ matrix.python-version }}
+        allow-prereleases: true
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: true
+
+    - name: Update apt repo and Cache & Install Dependencies
+      run: sudo apt-get update
+    - uses: awalsh128/cache-apt-pkgs-action@latest
+      with:
+        packages: ${{ env.APT_DEPENDENCIES }}
+        version: 1.0
+
+    - name: Run tox targets for ${{ matrix.python-version }}
+      run: |
+        sudo apt install -y ${{ env.APT_DEPENDENCIES }}
+        uvx --with tox-uv tox run -f py$(echo ${{ matrix.python-version }} | tr -d .)
+
+    - name: Upload coverage data
+      uses: actions/upload-artifact@v7
+      with:
+        name: coverage-data-${{ matrix.python-version }}
+        path: '${{ github.workspace }}/.coverage/*'
+        include-hidden-files: true
+        if-no-files-found: error
+
+  coverage:
+    name: Coverage
+    runs-on: ubuntu-24.04
+    needs: tests
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Update apt repo and Cache & Install Dependencies
+        run: sudo apt-get update
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: ${{ env.APT_DEPENDENCIES }}
+          version: 1.0
+
+      - name: Install dependencies
+        run: |
+          sudo apt install -y ${{ env.APT_DEPENDENCIES }}
+          uv pip install --system coverage[toml]
+
+      - name: Download data
+        uses: actions/download-artifact@v8
+        with:
+          path: .coverage
+          pattern: coverage-data-*
+          merge-multiple: true
+
+      - name: Combine coverage and fail if it's <60%
+        run: |
+          python -m coverage combine
+          python -m coverage html --skip-covered --skip-empty
+          python -m coverage report --fail-under=60
+          echo "## Coverage summary" >> $GITHUB_STEP_SUMMARY
+          python -m coverage report --format=markdown >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload HTML report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: html-report
+          path: htmlcov
+
+  release:
+    needs: [coverage]
+    if: github.ref == 'refs/heads/main' 
+    runs-on: ubuntu-24.04
+    environment: 
+      name: pypi
+      url: https://pypi.org/p/django-ontology/
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7
+      - name: Update apt repo and Cache & Install Dependencies
+        run: sudo apt-get update
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: ${{ env.APT_DEPENDENCIES }}
+          version: 1.0
+          
+      - name: Build
+        run: |
+          sudo apt install -y ${{ env.APT_DEPENDENCIES }}
+          uv build
+      - uses: pypa/gh-action-pypi-publish@release/v1

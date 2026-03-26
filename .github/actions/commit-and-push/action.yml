@@ -1,0 +1,27 @@
+name: Pull Commit and Push
+description: Commit all changes and push to the target branch, skipping CI.
+
+inputs:
+  commit-message:
+    description: The commit message to use.
+    required: false
+    default: "chore: update build"
+  target-branch:
+    description: The branch to push to.
+    required: false
+    default: development/prepare
+
+runs:
+  using: composite
+  steps:
+    - name: Commit and push changes
+      shell: bash
+      run: |
+        git config user.name "GitHub-Actions"
+        git config user.email "mail@groupeffect.de"
+        git status
+        git pull --rebase origin development/prepare || true
+        git add -A
+        # try to commit and do not fail
+        #git commit -m '[skip-ci] auto commit' || true
+        git push 
