@@ -29,7 +29,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
-ROOT_URLCONF = "interface.urls"
+ROOT_URLCONF = "tests.urls"
 
 TEMPLATES = [
     {
@@ -46,7 +46,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "interface.wsgi.application"
+WSGI_APPLICATION = "tests.wsgi.application"
 
 DATABASES = {
     "default": {
