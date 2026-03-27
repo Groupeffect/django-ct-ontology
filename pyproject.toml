@@ -42,7 +42,6 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  "debugpy>=1.8.20",
   "Django>=6",
   "django-filter>=25",
   "djangorestframework>=3.16",

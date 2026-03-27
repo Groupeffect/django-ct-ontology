@@ -4,7 +4,6 @@ from ontology import serializers
 from rest_framework import filters
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
-from django.conf import settings
 
 
 def set_filterset_fields_exclude(serializer_class):

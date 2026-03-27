@@ -2,23 +2,32 @@ from django.contrib.gis.db import models
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
-
+from rest_framework.reverse import reverse
+import rdflib as RL
 
 bn = {"blank": True, "null": True}
 
 
 class MetaModel(models.Model):
-    name = models.CharField(max_length=255)
-    description = models.TextField(**bn)
-    namespace = models.CharField(max_length=255, **bn)
-    label = models.CharField(max_length=255, **bn)
-    tag = models.CharField(max_length=255, **bn)
-    is_public = models.BooleanField(default=True)
-    is_private = models.BooleanField(default=False)
-    uri = models.URLField(**bn)
-    api = models.URLField(**bn)
-    wiki = models.URLField(**bn)
-    meta = models.JSONField(**bn)
+    name = models.CharField(max_length=255, help_text="The name of the instance.")
+    description = models.TextField(**bn, help_text="The description of the instance.")
+    namespace = models.CharField(
+        max_length=255, **bn, help_text="The namespace of the instance."
+    )
+    label = models.CharField(
+        max_length=255, **bn, help_text="The label of the instance."
+    )
+    tag = models.CharField(max_length=255, **bn, help_text="The tag of the instance.")
+    is_public = models.BooleanField(
+        default=True, help_text="Whether the instance is public."
+    )
+    is_private = models.BooleanField(
+        default=False, help_text="Whether the instance is private."
+    )
+    uri = models.URLField(**bn, help_text="The URI of the instance.")
+    api = models.URLField(**bn, help_text="The REST API of the instance.")
+    wiki = models.URLField(**bn, help_text="The wiki of the instance.")
+    meta = models.JSONField(**bn, help_text="The meta data in json format.")
     has_owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -37,6 +46,99 @@ class MetaModel(models.Model):
         abstract = True
         unique_together = ["uri", "name", "namespace", "tag", "has_owner"]
         app_label = "ontology"
+
+    @property
+    def admin_url(self):
+        MODEL = self.__class__.__name__.lower()
+        return reverse(f"admin:{self._meta.app_label}_{MODEL}_change", args=[self.id])
+
+    @property
+    def api_url(self):
+        MODEL = self.__class__.__name__.lower()
+        return reverse(f"{MODEL}-detail", args=[self.id])
+
+    @property
+    def model_uri(self):
+        MODEL = self.__class__.__name__.lower()
+        MODEL_URI = RL.URIRef(
+            reverse(f"admin:{self._meta.app_label}_{MODEL}_changelist")
+        )
+        return MODEL_URI
+
+    @property
+    def graph(self):
+        MODEL_URI = self.model_uri
+        MODEL = self.__class__.__name__.lower()
+        g = RL.Graph()
+        g.bind(f"ns-{MODEL}", RL.Namespace(MODEL_URI + "#Entity"))
+
+        g.add((MODEL_URI, RL.RDF.type, RL.RDFS.Class))
+        g.add(
+            (
+                RL.URIRef(self.admin_url),
+                RL.RDFS.subClassOf,
+                MODEL_URI,
+            )
+        )
+        g.add((RL.URIRef(self.admin_url), RL.DC.source, RL.URIRef(self.api_url)))
+        g.add(
+            (
+                RL.URIRef(self.admin_url),
+                RL.URIRef(f"{MODEL_URI}#has_owner"),
+                RL.Literal(self.has_owner.username),
+            )
+        )
+        g.add(
+            (
+                RL.URIRef(f"{MODEL_URI}#has_owner"),
+                RL.RDFS.subPropertyOf,
+                MODEL_URI,
+            )
+        )
+        for field in self._meta.get_fields():
+            if field.name not in [
+                "id",
+                "has_members",
+                "has_owner",
+                "_state",
+                "_cache_version",
+                "predicate",
+                "subject",
+                "object",
+                "triple",
+                "graph",
+                "rdf",
+                "model_uri",
+            ]:
+                g.add(
+                    (
+                        MODEL_URI,
+                        RL.SSN.hasProperty,
+                        RL.URIRef(f"{MODEL_URI}#{field.name}"),
+                    )
+                )
+
+                g.add(
+                    (
+                        RL.URIRef(self.admin_url),
+                        RL.URIRef(f"{MODEL_URI}#{field.name}"),
+                        RL.Literal(getattr(self, field.name)),
+                    )
+                )
+
+        for member in self.has_members.all():
+            g.add(
+                (
+                    RL.URIRef(self.admin_url),
+                    RL.ORG.hasMember,
+                    RL.Literal(member.username),
+                )
+            )
+        return g
+
+    @property
+    def rdf(self):
+        return self.graph.serialize(format="ttl")
 
 
 class Domain(MetaModel):
