@@ -5,9 +5,9 @@ requires = [
 ]
 
 [project]
-name = "django-ontology"
+name = "django-ct-ontology"
 version = "1.0.0"
-description = """django-ontology is a Django application for generating sematic tripples and graphs."""
+description = """django-ct-ontology is a Django application for generating sematic tripples and graphs for content types and more."""
 readme = "README.rst"
 keywords = [
   "api",
@@ -47,8 +47,8 @@ dependencies = [
   "djangorestframework>=3.16",
   "rdflib>=7.6",
 ]
-urls.Changelog = "https://github.com/groupeffect/django-ontology/blob/main/CHANGELOG.rst"
-urls.Repository = "https://github.com/groupeffect/django-ontology"
+urls.Changelog = "https://github.com/groupeffect/django-ct-ontology/blob/main/CHANGELOG.rst"
+urls.Repository = "https://github.com/groupeffect/django-ct-ontology"
 
 [tool.setuptools.packages.find]
 where = ["src"]

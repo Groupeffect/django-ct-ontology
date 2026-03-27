@@ -3,8 +3,8 @@
     "editor.formatOnSave": true,
     "python-envs.pythonProjects": [
         {
-            "name": "django-ontology",
-            "path": "/home/worker/apps/github/django-ontology"
+            "name": "django-ct-ontology",
+            "path": "/home/worker/apps/github/django-ct-ontology"
         }
     ]
 }

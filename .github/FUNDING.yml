@@ -1,4 +1,4 @@
 github: groupeffect
-tidelift: pypi/django-ontology
+tidelift: pypi/django-ct-ontology
 custom:
-- "https://github.com/Groupeffect/django-ontology"
+- "https://github.com/Groupeffect/django-ct-ontology"

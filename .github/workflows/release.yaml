@@ -1,4 +1,4 @@
-name: CI django ontology
+name: CI django ct ontology
 
 env:
   APT_DEPENDENCIES: "gdal-bin libgdal-dev libgeos-dev libproj-dev libsqlite3-mod-spatialite libopenblas-dev"
@@ -109,7 +109,7 @@ jobs:
     runs-on: ubuntu-24.04
     environment: 
       name: pypi
-      url: https://pypi.org/p/django-ontology/
+      url: https://pypi.org/p/django-ct-ontology/
 
     permissions:
       contents: read

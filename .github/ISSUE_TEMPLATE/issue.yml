@@ -6,9 +6,8 @@ body:
   attributes:
     label: Understanding OGC ontology
     description: >
-      90% of the issues reported in django-ontology are due to a misunderstanding of what Ontology does.
-      It can be implemented as database schema. Please refere to https://docs.ogc.org/is/18-088/18-088.html
-      or https://en.wikipedia.org/wiki/Ontology
+      90% of the issues reported in django-ct-ontology are due to a misunderstanding of what Ontology does.
+      It can be implemented as database schema. Please refere to https://www.w3.org/RDF/ or https://en.wikipedia.org/wiki/Ontology
     options:
     - label: I have read the resources.
       required: true

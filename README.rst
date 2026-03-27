@@ -1,8 +1,8 @@
 =====================
-django-ontology
+django-ct-ontology
 =====================
 
-A Django application for handling rdf ontology data.
+A Django application for handling database content types with rdf ontology and more.
 
 .. contents:: Table of Contents
    :depth: 2
@@ -29,13 +29,13 @@ Install from PyPI:
 
 .. code-block:: bash
 
-   pip install django-ontology
+   pip install django-ct-ontology
 
 Or via `uv <https://docs.astral.sh/uv/>`_:
 
 .. code-block:: bash
 
-   uv add django-ontology
+   uv add django-ct-ontology
 
 
 Configuration
