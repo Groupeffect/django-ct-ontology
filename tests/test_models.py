@@ -1,6 +1,9 @@
 from ontology import models
 from ontology.db import core
 from django.test import SimpleTestCase, TestCase
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class MetaModelTests(SimpleTestCase):
@@ -12,6 +15,11 @@ class MetaModelTests(SimpleTestCase):
 
 class MetaTestCase(TestCase):
     def setUp(self):
+        self.superuser = User.objects.create_superuser(
+            username="admin", password="password"
+        )
+        self.user = User.objects.create_user(username="user", password="password")
+
         self.domain, created = models.Domain.objects.update_or_create(
             name="test",
             namespace="test",
@@ -23,7 +31,7 @@ class MetaTestCase(TestCase):
             api="http://test.com",
             wiki="http://test.com",
             meta="http://test.com",
-            has_owner=None,
+            has_owner=self.superuser,
         )
 
 
@@ -61,7 +69,7 @@ class PredicateTests(MetaTestCase):
             tag="test",
             is_public=True,
             is_private=False,
-            has_owner=None,
+            has_owner=self.superuser,
         )
 
         # read
@@ -74,7 +82,7 @@ class PredicateTests(MetaTestCase):
         self.assertEqual(fetched.tag, "test")
         self.assertEqual(fetched.is_public, True)
         self.assertEqual(fetched.is_private, False)
-        self.assertEqual(fetched.has_owner, None)
+        self.assertEqual(fetched.has_owner, self.superuser)
 
         # update
         fetched.name = "test2"
@@ -121,7 +129,7 @@ class SubjectTests(MetaTestCase):
             tag="test",
             is_public=True,
             is_private=False,
-            has_owner=None,
+            has_owner=self.superuser,
         )
 
         # read
@@ -134,7 +142,7 @@ class SubjectTests(MetaTestCase):
         self.assertEqual(fetched.tag, "test")
         self.assertEqual(fetched.is_public, True)
         self.assertEqual(fetched.is_private, False)
-        self.assertEqual(fetched.has_owner, None)
+        self.assertEqual(fetched.has_owner, self.superuser)
 
         # update
         fetched.name = "test2"
@@ -148,7 +156,7 @@ class SubjectTests(MetaTestCase):
         self.assertFalse(models.Subject.objects.filter(pk=pk).exists())
 
 
-class DomainTests(TestCase):
+class DomainTests(MetaTestCase):
     def test_meta(self):
         self.assertEqual(models.Domain._meta.db_table, "ontology_domain")
         self.assertFalse(models.Domain._meta.abstract)
@@ -184,7 +192,7 @@ class DomainTests(TestCase):
             is_public=True,
             is_private=False,
             uri="http://test2.com",
-            has_owner=None,
+            has_owner=self.superuser,
         )
 
         # read
@@ -197,7 +205,7 @@ class DomainTests(TestCase):
         self.assertEqual(fetched.is_public, True)
         self.assertEqual(fetched.is_private, False)
         self.assertEqual(fetched.uri, "http://test2.com")
-        self.assertEqual(fetched.has_owner, None)
+        self.assertEqual(fetched.has_owner, self.superuser)
 
         # update
         fetched.name = "test3"
@@ -244,7 +252,7 @@ class ObjectTests(MetaTestCase):
             tag="test",
             is_public=True,
             is_private=False,
-            has_owner=None,
+            has_owner=self.superuser,
         )
 
         # read
@@ -257,7 +265,7 @@ class ObjectTests(MetaTestCase):
         self.assertEqual(fetched.tag, "test")
         self.assertEqual(fetched.is_public, True)
         self.assertEqual(fetched.is_private, False)
-        self.assertEqual(fetched.has_owner, None)
+        self.assertEqual(fetched.has_owner, self.superuser)
 
         # update
         fetched.name = "test2"
@@ -298,9 +306,11 @@ class TripleTests(MetaTestCase):
     def test_create_read_update_delete(self):
         """CRUD test instance"""
         # create
-        sub = models.Subject.objects.create(name="test_sub")
-        pred = models.Predicate.objects.create(name="test_pred")
-        obj = models.Object.objects.create(name="test_obj")
+        sub = models.Subject.objects.create(name="test_sub", has_owner=self.superuser)
+        pred = models.Predicate.objects.create(
+            name="test_pred", has_owner=self.superuser
+        )
+        obj = models.Object.objects.create(name="test_obj", has_owner=self.superuser)
 
         instance = models.Triple.objects.create(
             name="test",
@@ -314,7 +324,7 @@ class TripleTests(MetaTestCase):
             sub=sub,
             pred=pred,
             obj=obj,
-            has_owner=None,
+            has_owner=self.superuser,
         )
 
         # read
@@ -330,7 +340,7 @@ class TripleTests(MetaTestCase):
         self.assertEqual(fetched.sub, sub)
         self.assertEqual(fetched.pred, pred)
         self.assertEqual(fetched.obj, obj)
-        self.assertEqual(fetched.has_owner, None)
+        self.assertEqual(fetched.has_owner, self.superuser)
 
         # update
         fetched.name = "test2"
@@ -378,7 +388,7 @@ class GraphTests(MetaTestCase):
             tag="test",
             is_public=True,
             is_private=False,
-            has_owner=None,
+            has_owner=self.superuser,
         )
 
         # read
@@ -391,7 +401,7 @@ class GraphTests(MetaTestCase):
         self.assertEqual(fetched.tag, "test")
         self.assertEqual(fetched.is_public, True)
         self.assertEqual(fetched.is_private, False)
-        self.assertEqual(fetched.has_owner, None)
+        self.assertEqual(fetched.has_owner, self.superuser)
 
         # update
         fetched.name = "test2"
